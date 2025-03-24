@@ -1,5 +1,6 @@
 export const dynamic = 'force-static';
-export const revalidate = 3600; // Revalidate at most every hour
+export const revalidate = false; // Nie neu validieren, komplett statisch
+export const generateStaticParams = () => [];
 
 import Landing from "./components/Landing"
 
