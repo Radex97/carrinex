@@ -1,12 +1,13 @@
-// Statische Konfiguration, um Middleware-Probleme zu vermeiden
+// Statische Konfiguration für optimale Performance
 export const dynamic = 'force-static';
 export const revalidate = false;
 
-import { redirect } from 'next/navigation'
+// Direkt die Landing-Komponente importieren
+import Landing from "./(public-pages)/landing/components/Landing"
 
 const Page = () => {
-    // Server-seitige Weiterleitung zur Landing Page
-    redirect('/')
+    // Direkt die Landing-Komponente rendern, ohne Weiterleitung
+    return <Landing />
 }
 
 export default Page
