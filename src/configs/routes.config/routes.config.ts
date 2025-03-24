@@ -175,12 +175,17 @@ export const protectedRoutes: Routes = {
 
 export const publicRoutes: Routes = {
     '/': {
-        key: 'home',
+        key: 'landing',
         authority: [],
         meta: {
             pageBackgroundType: 'default',
             pageContainerType: 'gutterless',
             layout: 'blank',
+            header: {
+                title: 'Carrinex - Die Plattform für Versender und Subunternehmer',
+                description: 'Willkommen bei Carrinex - Ihrer Logistikplattform',
+                contained: false,
+            },
         },
     },
     '/access-denied': {
