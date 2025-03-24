@@ -188,7 +188,7 @@ const OnboardingClient = () => {
                 </p>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 sm:p-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sm:p-8">
                 <Steps current={currentStep}>
                     <Steps.Item title="Unternehmenstyp" />
                     <Steps.Item title="Unternehmensdaten" />
