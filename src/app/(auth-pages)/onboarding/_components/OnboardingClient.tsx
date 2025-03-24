@@ -183,23 +183,21 @@ const OnboardingClient = () => {
             </div>
             <div className="mb-8 text-center">
                 <h2 className="mb-2 text-2xl font-bold">Willkommen bei Carrinex!</h2>
-                <p className="text-lg text-gray-600">
+                <p className="text-lg text-gray-600 dark:text-gray-400">
                     Lass uns Dein Unternehmen einrichten.
                 </p>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <div className="p-6 sm:p-8">
-                    <Steps current={currentStep}>
-                        <Steps.Item title="Unternehmenstyp" />
-                        <Steps.Item title="Unternehmensdaten" />
-                        <Steps.Item title="Details" />
-                        <Steps.Item title="Abschluss" />
-                    </Steps>
-                    
-                    <div className="mt-8">
-                        {renderCurrentStep()}
-                    </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 sm:p-8">
+                <Steps current={currentStep}>
+                    <Steps.Item title="Unternehmenstyp" />
+                    <Steps.Item title="Unternehmensdaten" />
+                    <Steps.Item title="Details" />
+                    <Steps.Item title="Abschluss" />
+                </Steps>
+                
+                <div className="mt-8">
+                    {renderCurrentStep()}
                 </div>
             </div>
         </div>
