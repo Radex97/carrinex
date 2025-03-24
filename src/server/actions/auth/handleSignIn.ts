@@ -4,7 +4,7 @@ import { signIn } from '@/auth'
 import appConfig from '@/configs/app.config'
 import { AuthError } from 'next-auth'
 import { auth } from '@/firebase/firebase.config'
-import { getUserById } from '@/firebase/firestore'
+import { getUserById, getCompanyById } from '@/firebase/firestore'
 import type { SignInCredential } from '@/@types/auth'
 
 export const onSignInWithCredentials = async (
@@ -34,13 +34,36 @@ export const onSignInWithCredentials = async (
         // Holen Sie die Benutzerdaten aus Firestore
         const userData = await getUserById(currentUser.uid);
         
-        // Prüfen Sie, ob der Benutzer das Onboarding abgeschlossen hat
-        if (userData && !userData.isOnboarded) {
-            // Wenn nicht onboarded, leiten Sie zum Onboarding-Prozess weiter
+        if (!userData) {
+            return { error: 'Benutzerdaten konnten nicht abgerufen werden!' };
+        }
+        
+        // Benutzer-Weiterleitungslogik
+        
+        // 1. Wenn Admin, zum Admin-Dashboard
+        if (userData.role === 'admin') {
+            return { redirectTo: '/admin/dashboard' };
+        }
+        
+        // 2. Wenn nicht onboarded, zum Onboarding
+        if (!userData.isOnboarded || !userData.companyId) {
             return { redirectTo: '/onboarding' };
         }
-
-        // Normale Weiterleitung für onboarded Benutzer
+        
+        // 3. Wenn onboarded, prüfen welcher Unternehmenstyp und entsprechend weiterleiten
+        const company = await getCompanyById(userData.companyId);
+        
+        if (!company) {
+            return { error: 'Unternehmensdaten konnten nicht abgerufen werden!' };
+        }
+        
+        if (company.type === 'versender') {
+            return { redirectTo: '/versender/dashboard' };
+        } else if (company.type === 'subunternehmer') {
+            return { redirectTo: '/subunternehmer/dashboard' };
+        }
+        
+        // Fallback, falls der Unternehmenstyp unbekannt ist
         return { redirectTo: callbackUrl || appConfig.authenticatedEntryPath };
         
     } catch (error) {

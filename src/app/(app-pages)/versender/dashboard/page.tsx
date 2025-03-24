@@ -1,8 +1,9 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { getUserById, getCompanyById } from '@/firebase/firestore'
+import { getUserById, getCompanyById, getCompanyLocations } from '@/firebase/firestore'
+import VersenderDashboardClient from './_components/VersenderDashboardClient'
 
-const DashboardPage = async () => {
+const VersenderDashboardPage = async () => {
     // Session prüfen
     const session = await auth()
     if (!session || !session.user) {
@@ -23,11 +24,6 @@ const DashboardPage = async () => {
         redirect('/sign-in')
     }
 
-    // Prüfen, ob Benutzer ein Admin ist
-    if (user.role === 'admin') {
-        redirect('/admin/dashboard')
-    }
-
     // Prüfen, ob Benutzer Onboarding abgeschlossen hat
     if (!user.isOnboarded || !user.companyId) {
         redirect('/onboarding')
@@ -40,15 +36,22 @@ const DashboardPage = async () => {
         redirect('/error?code=company-not-found')
     }
 
-    // Weiterleitung basierend auf dem Unternehmenstyp
-    if (company.type === 'versender') {
-        redirect('/versender/dashboard')
-    } else if (company.type === 'subunternehmer') {
-        redirect('/subunternehmer/dashboard')
-    } else {
-        // Fallback, falls der Typ unbekannt ist
-        redirect('/error?code=unknown-company-type')
+    // Prüfen, ob der Benutzer ein Versender ist
+    if (company.type !== 'versender') {
+        // Weiterleitung zum richtigen Dashboard basierend auf dem Unternehmenstyp
+        redirect(company.type === 'subunternehmer' ? '/subunternehmer/dashboard' : '/admin/dashboard')
     }
+
+    // Standorte aus der Subkollektion abrufen
+    const locations = await getCompanyLocations(user.companyId)
+
+    return (
+        <VersenderDashboardClient 
+            user={user} 
+            company={company}
+            locations={locations} 
+        />
+    )
 }
 
-export default DashboardPage 
+export default VersenderDashboardPage 
