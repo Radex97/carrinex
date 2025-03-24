@@ -1,3 +1,5 @@
+import { DefaultSession } from 'next-auth'
+
 export type SignInCredential = {
     email: string
     password: string
@@ -43,10 +45,14 @@ export type AuthResult = Promise<{
 }>
 
 export type User = {
-    userId?: string | null
-    avatar?: string | null
-    userName?: string | null
-    email?: string | null
+    id: string
+    userName: string
+    email: string
+    avatar?: string
+    role?: 'admin' | 'user'
+    companyType?: 'versender' | 'subunternehmer'
+    companyId?: string
+    isOnboarded?: boolean
     authority?: string[]
 }
 
@@ -58,4 +64,21 @@ export type Token = {
 export type OauthSignInCallbackPayload = {
     onSignIn: (tokens: Token, user?: User) => void
     redirect: () => void
+}
+
+declare module 'next-auth' {
+    interface Session {
+        user: {
+            id: string
+            authority: string[]
+        } & DefaultSession['user']
+    }
+
+    interface User {
+        authority?: string[]
+    }
+
+    interface JWT {
+        authority?: string[]
+    }
 }
