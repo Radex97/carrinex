@@ -3,6 +3,9 @@ import validateCredential from '../server/actions/user/validateCredential'
 import Credentials from 'next-auth/providers/credentials'
 import Github from 'next-auth/providers/github'
 import Google from 'next-auth/providers/google'
+import { FirestoreAdapter } from "@auth/firebase-adapter";
+import { db } from '@/firebase/firebase.config';
+import { getFirestore } from 'firebase-admin/firestore';
 
 import type { SignInCredential } from '@/@types/auth'
 
@@ -47,5 +50,12 @@ export default {
                 },
             }
         },
+        async signIn({ user }) {
+            // Für Firebase-Integration: Hier können wir zusätzliche Validierungen durchführen
+            if (user) {
+                return true;
+            }
+            return false;
+        }
     },
 } satisfies NextAuthConfig
