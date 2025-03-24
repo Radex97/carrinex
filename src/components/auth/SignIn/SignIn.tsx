@@ -12,12 +12,14 @@ type SignInProps = {
     signUpUrl?: string
     forgetPasswordUrl?: string
     onSignIn?: OnSignIn
+    isRedirecting?: boolean
 }
 
 const SignIn = ({
     signUpUrl = '/sign-up',
     forgetPasswordUrl = '/forgot-password',
     onSignIn,
+    isRedirecting = false,
 }: SignInProps) => {
     const [message, setMessage] = useTimeOutMessage()
 
@@ -58,6 +60,7 @@ const SignIn = ({
                     </div>
                 }
                 onSignIn={onSignIn}
+                disabled={isRedirecting}
             />
             <div>
                 <div className="mt-6 text-center">

@@ -29,6 +29,7 @@ export type OnSignUp = (payload: OnSignUpPayload) => void
 interface SignUpFormProps extends CommonProps {
     setMessage: (message: string) => void
     onSignUp?: OnSignUp
+    disabled?: boolean
 }
 
 const validationSchema: ZodType<SignUpFormSchema> = z
@@ -51,7 +52,7 @@ const validationSchema: ZodType<SignUpFormSchema> = z
     })
 
 const SignUpForm = (props: SignUpFormProps) => {
-    const { onSignUp, className, setMessage } = props
+    const { onSignUp, className, setMessage, disabled = false } = props
 
     const [isSubmitting, setSubmitting] = useState<boolean>(false)
 
@@ -147,6 +148,7 @@ const SignUpForm = (props: SignUpFormProps) => {
                     loading={isSubmitting}
                     variant="solid"
                     type="submit"
+                    disabled={disabled}
                 >
                     {isSubmitting ? 'Konto wird erstellt...' : 'Registrieren'}
                 </Button>

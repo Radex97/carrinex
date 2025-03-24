@@ -11,9 +11,10 @@ import type { OnSignUp } from './SignUpForm'
 type SignUpProps = {
     signInUrl?: string
     onSignUp?: OnSignUp
+    disabled?: boolean
 }
 
-export const SignUp = ({ onSignUp, signInUrl = '/sign-in' }: SignUpProps) => {
+export const SignUp = ({ onSignUp, signInUrl = '/sign-in', disabled = false }: SignUpProps) => {
     const [message, setMessage] = useTimeOutMessage()
 
     const mode = useTheme((state) => state.mode)
@@ -39,7 +40,7 @@ export const SignUp = ({ onSignUp, signInUrl = '/sign-in' }: SignUpProps) => {
                     <span className="break-all">{message}</span>
                 </Alert>
             )}
-            <SignUpForm onSignUp={onSignUp} setMessage={setMessage} />
+            <SignUpForm onSignUp={onSignUp} setMessage={setMessage} disabled={disabled} />
             <div>
                 <div className="mt-6 text-center">
                     <span>Du hast bereits ein Konto? </span>

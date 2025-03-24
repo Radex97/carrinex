@@ -76,6 +76,7 @@ export const onSignInWithCredentials = async (
                     return { error: 'Ein Fehler ist aufgetreten!' }
             }
         }
-        throw error
+        console.error('Anmeldefehler:', error);
+        return { error: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.' };
     }
 }
