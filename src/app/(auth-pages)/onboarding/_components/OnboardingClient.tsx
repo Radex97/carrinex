@@ -189,18 +189,16 @@ const OnboardingClient = () => {
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <div className="p-4 sm:p-6 md:p-8">
-                    <div className="max-w-4xl mx-auto">
-                        <Steps current={currentStep}>
-                            <Steps.Item title="Unternehmenstyp" />
-                            <Steps.Item title="Unternehmensdaten" />
-                            <Steps.Item title="Details" />
-                            <Steps.Item title="Abschluss" />
-                        </Steps>
-                        
-                        <div className="mt-8">
-                            {renderCurrentStep()}
-                        </div>
+                <div className="p-6 sm:p-8">
+                    <Steps current={currentStep}>
+                        <Steps.Item title="Unternehmenstyp" />
+                        <Steps.Item title="Unternehmensdaten" />
+                        <Steps.Item title="Details" />
+                        <Steps.Item title="Abschluss" />
+                    </Steps>
+                    
+                    <div className="mt-8">
+                        {renderCurrentStep()}
                     </div>
                 </div>
             </div>
