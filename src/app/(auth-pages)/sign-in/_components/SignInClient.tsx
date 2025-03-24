@@ -13,6 +13,7 @@ import type { OnSignInPayload } from '@/components/auth/SignIn'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/firebase/firebase.config'
 import { getUserById, getCompanyById } from '@/firebase/firestore'
+import Notification from '@/components/ui/Notification'
 
 const SignInClient = () => {
     const [isRedirecting, setIsRedirecting] = useState(false)
@@ -47,14 +48,15 @@ const SignInClient = () => {
                 return
             }
             
+            // Erfolgsmeldung, die nach kurzer Zeit automatisch verschwindet
             toast.push(
-                <div className="flex items-center justify-between">
-                    <span className="font-semibold text-success">
+                <Notification type="success" duration={2000}>
+                    <span className="font-semibold">
                         Erfolgreich angemeldet
                     </span>
-                </div>,
+                </Notification>,
                 {
-                    placement: 'top-center',
+                    placement: 'top-center'
                 }
             )
             

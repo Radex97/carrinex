@@ -13,6 +13,8 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth } from '@/firebase/firebase.config'
 import { setDoc, doc } from 'firebase/firestore'
 import { db } from '@/firebase/firebase.config'
+import { signIn } from 'next-auth/react'
+import Notification from '@/components/ui/Notification'
 
 const SignUpClient = () => {
     const [isRedirecting, setIsRedirecting] = useState(false)
@@ -46,19 +48,29 @@ const SignUpClient = () => {
                 createdAt: new Date().toISOString()
             });
             
+            // Erfolgsmeldung anzeigen (automatisch schließend)
             toast.push(
-                <div className="flex items-center justify-between">
-                    <span className="font-semibold text-success">
+                <Notification type="success" duration={2000}>
+                    <span className="font-semibold">
                         Registrierung erfolgreich
                     </span>
-                </div>,
+                </Notification>,
                 {
-                    placement: 'top-center',
+                    placement: 'top-center'
                 }
-            )
+            );
+            
+            // Auch bei NextAuth anmelden
+            await signIn('credentials', {
+                email: values.email,
+                password: values.password,
+                redirect: false
+            });
             
             // Direkt zum Onboarding weiterleiten
-            router.push('/onboarding')
+            setTimeout(() => {
+                router.push('/onboarding');
+            }, 500); // Kurze Verzögerung für bessere UX
             
         } catch (error: any) {
             console.error('Registrierungsfehler:', error)

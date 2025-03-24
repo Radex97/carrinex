@@ -115,7 +115,7 @@ const OnboardingClient = () => {
             await createCompany(companyCreateData, currentUser.uid)
 
             toast.push(
-                <Notification title="Onboarding abgeschlossen!" type="success">
+                <Notification title="Onboarding abgeschlossen!" type="success" duration={2000}>
                     Dein Unternehmen wurde erfolgreich eingerichtet.
                 </Notification>
             )
@@ -173,7 +173,7 @@ const OnboardingClient = () => {
     }
 
     return (
-        <div className="mb-8">
+        <div className="container mx-auto px-4 py-8">
             <div className="mb-8 flex justify-center">
                 <Logo
                     type="streamline"
@@ -189,8 +189,8 @@ const OnboardingClient = () => {
                 </p>
             </div>
             
-            <Card className="max-w-3xl mx-auto">
-                <div className="p-8">
+            <Card className="max-w-3xl mx-auto shadow-lg rounded-xl">
+                <div className="p-4 sm:p-6 md:p-8">
                     <Steps current={currentStep}>
                         <Steps.Item title="Unternehmenstyp" />
                         <Steps.Item title="Unternehmensdaten" />
@@ -198,7 +198,7 @@ const OnboardingClient = () => {
                         <Steps.Item title="Abschluss" />
                     </Steps>
                     
-                    <div className="mt-8">
+                    <div className="mt-8 max-w-2xl mx-auto">
                         {renderCurrentStep()}
                     </div>
                 </div>
