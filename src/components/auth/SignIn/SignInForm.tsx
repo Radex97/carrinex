@@ -35,11 +35,12 @@ type SignInFormSchema = {
 
 const validationSchema: ZodType<SignInFormSchema> = z.object({
     email: z
-        .string({ required_error: 'Please enter your email' })
-        .min(1, { message: 'Please enter your email' }),
+        .string({ required_error: 'Bitte gib deine E-Mail-Adresse ein' })
+        .email({ message: 'Bitte gib eine gültige E-Mail-Adresse ein' })
+        .min(1, { message: 'Bitte gib deine E-Mail-Adresse ein' }),
     password: z
-        .string({ required_error: 'Please enter your password' })
-        .min(1, { message: 'Please enter your password' }),
+        .string({ required_error: 'Bitte gib dein Passwort ein' })
+        .min(1, { message: 'Bitte gib dein Passwort ein' }),
 })
 
 const SignInForm = (props: SignInFormProps) => {
@@ -52,10 +53,6 @@ const SignInForm = (props: SignInFormProps) => {
         formState: { errors },
         control,
     } = useForm<SignInFormSchema>({
-        defaultValues: {
-            email: 'admin-01@ecme.com',
-            password: '123Qwe',
-        },
         resolver: zodResolver(validationSchema),
     })
 
@@ -69,7 +66,7 @@ const SignInForm = (props: SignInFormProps) => {
         <div className={className}>
             <Form onSubmit={handleSubmit(handleSignIn)}>
                 <FormItem
-                    label="Email"
+                    label="E-Mail"
                     invalid={Boolean(errors.email)}
                     errorMessage={errors.email?.message}
                 >
@@ -79,15 +76,15 @@ const SignInForm = (props: SignInFormProps) => {
                         render={({ field }) => (
                             <Input
                                 type="email"
-                                placeholder="Email"
-                                autoComplete="off"
+                                placeholder="E-Mail-Adresse"
+                                autoComplete="email"
                                 {...field}
                             />
                         )}
                     />
                 </FormItem>
                 <FormItem
-                    label="Password"
+                    label="Passwort"
                     invalid={Boolean(errors.password)}
                     errorMessage={errors.password?.message}
                     className={classNames(
@@ -101,9 +98,8 @@ const SignInForm = (props: SignInFormProps) => {
                         rules={{ required: true }}
                         render={({ field }) => (
                             <PasswordInput
-                                type="text"
-                                placeholder="Password"
-                                autoComplete="off"
+                                placeholder="Passwort"
+                                autoComplete="current-password"
                                 {...field}
                             />
                         )}
@@ -116,7 +112,7 @@ const SignInForm = (props: SignInFormProps) => {
                     variant="solid"
                     type="submit"
                 >
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
+                    {isSubmitting ? 'Anmeldung läuft...' : 'Anmelden'}
                 </Button>
             </Form>
         </div>

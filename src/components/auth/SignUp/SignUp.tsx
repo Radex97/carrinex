@@ -29,9 +29,9 @@ export const SignUp = ({ onSignUp, signInUrl = '/sign-in' }: SignUpProps) => {
                 />
             </div>
             <div className="mb-8">
-                <h3 className="mb-1">Sign Up</h3>
+                <h3 className="mb-1">Registrieren</h3>
                 <p className="font-semibold heading-text">
-                    And lets get started with your free trial
+                    Starte jetzt mit deiner kostenlosen Testphase
                 </p>
             </div>
             {message && (
@@ -42,13 +42,13 @@ export const SignUp = ({ onSignUp, signInUrl = '/sign-in' }: SignUpProps) => {
             <SignUpForm onSignUp={onSignUp} setMessage={setMessage} />
             <div>
                 <div className="mt-6 text-center">
-                    <span>Already have an account? </span>
+                    <span>Du hast bereits ein Konto? </span>
                     <ActionLink
                         href={signInUrl}
                         className="heading-text font-bold"
                         themeColor={false}
                     >
-                        Sign in
+                        Anmelden
                     </ActionLink>
                 </div>
             </div>

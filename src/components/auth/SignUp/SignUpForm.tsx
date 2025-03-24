@@ -9,12 +9,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { ZodType } from 'zod'
 import type { CommonProps } from '@/@types/common'
+import PasswordInput from '@/components/shared/PasswordInput'
 
 type SignUpFormSchema = {
-    userName: string
-    password: string
-    email: string
-    confirmPassword: string
+    displayName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
 }
 
 export type OnSignUpPayload = {
@@ -32,15 +33,20 @@ interface SignUpFormProps extends CommonProps {
 
 const validationSchema: ZodType<SignUpFormSchema> = z
     .object({
-        email: z.string({ required_error: 'Please enter your email' }),
-        userName: z.string({ required_error: 'Please enter your name' }),
-        password: z.string({ required_error: 'Password Required' }),
-        confirmPassword: z.string({
-            required_error: 'Confirm Password Required',
-        }),
+        email: z
+            .string({ required_error: 'Bitte gib deine E-Mail-Adresse ein' })
+            .email({ message: 'Bitte gib eine gültige E-Mail-Adresse ein' }),
+        displayName: z
+            .string({ required_error: 'Bitte gib deinen Namen ein' })
+            .min(2, { message: 'Der Name muss mindestens 2 Zeichen lang sein' }),
+        password: z
+            .string({ required_error: 'Passwort erforderlich' })
+            .min(6, { message: 'Das Passwort muss mindestens 6 Zeichen lang sein' }),
+        confirmPassword: z
+            .string({ required_error: 'Bitte bestätige dein Passwort' }),
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: 'Password not match',
+        message: 'Passwörter stimmen nicht überein',
         path: ['confirmPassword'],
     })
 
@@ -67,25 +73,25 @@ const SignUpForm = (props: SignUpFormProps) => {
         <div className={className}>
             <Form onSubmit={handleSubmit(handleSignUp)}>
                 <FormItem
-                    label="User name"
-                    invalid={Boolean(errors.userName)}
-                    errorMessage={errors.userName?.message}
+                    label="Name"
+                    invalid={Boolean(errors.displayName)}
+                    errorMessage={errors.displayName?.message}
                 >
                     <Controller
-                        name="userName"
+                        name="displayName"
                         control={control}
                         render={({ field }) => (
                             <Input
                                 type="text"
-                                placeholder="User Name"
-                                autoComplete="off"
+                                placeholder="Vollständiger Name"
+                                autoComplete="name"
                                 {...field}
                             />
                         )}
                     />
                 </FormItem>
                 <FormItem
-                    label="Email"
+                    label="E-Mail"
                     invalid={Boolean(errors.email)}
                     errorMessage={errors.email?.message}
                 >
@@ -95,15 +101,15 @@ const SignUpForm = (props: SignUpFormProps) => {
                         render={({ field }) => (
                             <Input
                                 type="email"
-                                placeholder="Email"
-                                autoComplete="off"
+                                placeholder="E-Mail-Adresse"
+                                autoComplete="email"
                                 {...field}
                             />
                         )}
                     />
                 </FormItem>
                 <FormItem
-                    label="Password"
+                    label="Passwort"
                     invalid={Boolean(errors.password)}
                     errorMessage={errors.password?.message}
                 >
@@ -111,17 +117,16 @@ const SignUpForm = (props: SignUpFormProps) => {
                         name="password"
                         control={control}
                         render={({ field }) => (
-                            <Input
-                                type="password"
-                                autoComplete="off"
-                                placeholder="Password"
+                            <PasswordInput
+                                placeholder="Passwort"
+                                autoComplete="new-password"
                                 {...field}
                             />
                         )}
                     />
                 </FormItem>
                 <FormItem
-                    label="Confirm Password"
+                    label="Passwort bestätigen"
                     invalid={Boolean(errors.confirmPassword)}
                     errorMessage={errors.confirmPassword?.message}
                 >
@@ -129,10 +134,9 @@ const SignUpForm = (props: SignUpFormProps) => {
                         name="confirmPassword"
                         control={control}
                         render={({ field }) => (
-                            <Input
-                                type="password"
-                                autoComplete="off"
-                                placeholder="Confirm Password"
+                            <PasswordInput
+                                placeholder="Passwort bestätigen"
+                                autoComplete="new-password"
                                 {...field}
                             />
                         )}
@@ -144,7 +148,7 @@ const SignUpForm = (props: SignUpFormProps) => {
                     variant="solid"
                     type="submit"
                 >
-                    {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                    {isSubmitting ? 'Konto wird erstellt...' : 'Registrieren'}
                 </Button>
             </Form>
         </div>
