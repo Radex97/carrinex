@@ -50,11 +50,13 @@ export default auth((req) => {
     const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
     const isPublicRoute = publicRoutes.includes(pathname)
     const isAuthRoute = authRoutes.includes(pathname)
+    const isOnboardingRoute = pathname === '/onboarding' || pathname.startsWith('/onboarding/')
     
     console.log('Route checks:', {
         isSignedIn,
         isPublicRoute,
-        isAuthRoute
+        isAuthRoute,
+        isOnboardingRoute
     })
 
     /** Skip auth middleware for api routes */
@@ -63,9 +65,25 @@ export default auth((req) => {
         return
     }
 
+    // Spezielle Behandlung für Onboarding - muss angemeldet sein, aber wird nicht weitergeleitet
+    if (isOnboardingRoute) {
+        if (!isSignedIn) {
+            console.log('Unauthenticated user trying to access onboarding, redirecting to sign-in')
+            return Response.redirect(
+                new URL(
+                    `${appConfig.unAuthenticatedEntryPath}?${REDIRECT_URL_KEY}=${pathname}`,
+                    nextUrl,
+                ),
+            )
+        }
+        console.log('Authenticated user accessing onboarding, allowing')
+        return
+    }
+
+    // Normale Auth-Routen Behandlung
     if (isAuthRoute) {
         if (isSignedIn) {
-            /** Redirect to authenticated entry path if signed in & path is auth route */
+            /** Nicht weiterleiten, wenn der Benutzer zum Onboarding gehen möchte */
             console.log('Signed in user accessing auth route, redirecting to:', appConfig.authenticatedEntryPath)
             return Response.redirect(
                 new URL(appConfig.authenticatedEntryPath, nextUrl),
@@ -92,7 +110,7 @@ export default auth((req) => {
     }
 
     /** Role based access control - nur für geschützte Routen */
-    if (isSignedIn && !isPublicRoute && pathname !== '/access-denied') {
+    if (isSignedIn && !isPublicRoute && !isOnboardingRoute && pathname !== '/access-denied') {
         const routeMeta = protectedRoutes[pathname]
         
         // Wenn die Route Berechtigungen hat und diese nicht leer sind

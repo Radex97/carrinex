@@ -9,6 +9,10 @@ import SignUp from '@/components/auth/SignUp'
 import Link from 'next/link'
 import cn from 'classnames'
 import { useRouter } from 'next/navigation'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { auth } from '@/firebase/firebase.config'
+import { setDoc, doc } from 'firebase/firestore'
+import { db } from '@/firebase/firebase.config'
 
 const SignUpClient = () => {
     const [isRedirecting, setIsRedirecting] = useState(false)
@@ -20,8 +24,27 @@ const SignUpClient = () => {
             setSubmitting(true)
             setIsRedirecting(true)
             
-            // Hier wird die Registrierung durchgeführt
-            // Wenn erfolgreich, weiterleiten zum Onboarding
+            // Firebase-Benutzer erstellen
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                values.email,
+                values.password
+            );
+            
+            // Benutzerprofil aktualisieren
+            await updateProfile(userCredential.user, {
+                displayName: values.displayName
+            });
+            
+            // Benutzer in Firestore speichern
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                uid: userCredential.user.uid,
+                displayName: values.displayName,
+                email: values.email,
+                role: 'user',
+                isOnboarded: false,
+                createdAt: new Date().toISOString()
+            });
             
             toast.push(
                 <div className="flex items-center justify-between">
@@ -34,16 +57,24 @@ const SignUpClient = () => {
                 }
             )
             
-            // Verzögerung für die Weiterleitung hinzufügen
-            setTimeout(() => {
-                router.push('/onboarding')
-            }, 1000)
+            // Direkt zum Onboarding weiterleiten
+            router.push('/onboarding')
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Registrierungsfehler:', error)
             setIsRedirecting(false)
             setSubmitting(false)
-            setMessage('Ein unerwarteter Fehler ist aufgetreten')
+            
+            // Fehlermeldung basierend auf Firebase-Fehlercode anzeigen
+            if (error.code === 'auth/email-already-in-use') {
+                setMessage('Diese E-Mail-Adresse wird bereits verwendet')
+            } else if (error.code === 'auth/invalid-email') {
+                setMessage('Ungültige E-Mail-Adresse')
+            } else if (error.code === 'auth/weak-password') {
+                setMessage('Das Passwort ist zu schwach')
+            } else {
+                setMessage('Ein unerwarteter Fehler ist aufgetreten')
+            }
         }
     }
 

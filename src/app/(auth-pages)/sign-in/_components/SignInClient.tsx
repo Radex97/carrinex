@@ -8,12 +8,17 @@ import SignIn from '@/components/auth/SignIn'
 import Link from 'next/link'
 import cn from 'classnames'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { OnSignInPayload } from '@/components/auth/SignIn'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/firebase/firebase.config'
+import { getUserById, getCompanyById } from '@/firebase/firestore'
 
 const SignInClient = () => {
     const [isRedirecting, setIsRedirecting] = useState(false)
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
     const onSignInWithCredentials = async (payload: OnSignInPayload) => {
         const { values, setSubmitting, setMessage } = payload
@@ -21,6 +26,14 @@ const SignInClient = () => {
             setSubmitting(true)
             setIsRedirecting(true)
             
+            // Mit Firebase anmelden
+            const userCredential = await signInWithEmailAndPassword(
+                auth, 
+                values.email, 
+                values.password
+            );
+            
+            // Mit NextAuth anmelden
             const result = await signIn('credentials', {
                 email: values.email,
                 password: values.password,
@@ -30,7 +43,7 @@ const SignInClient = () => {
             if (result?.error) {
                 setIsRedirecting(false)
                 setSubmitting(false)
-                setMessage('Fehler bei der Anmeldung')
+                setMessage('Ungültige Anmeldedaten')
                 return
             }
             
@@ -45,16 +58,58 @@ const SignInClient = () => {
                 }
             )
             
-            // Verzögerung für die Weiterleitung hinzufügen
-            setTimeout(() => {
-                router.push('/dashboard')
-            }, 1000)
+            // Benutzerdaten für die Weiterleitung prüfen
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                const userData = await getUserById(currentUser.uid);
+                
+                if (userData) {
+                    // Admin-Benutzer zum Admin-Dashboard weiterleiten
+                    if (userData.role === 'admin') {
+                        router.push('/admin/dashboard');
+                        return;
+                    }
+                    
+                    // Nicht onboarded? Zum Onboarding weiterleiten
+                    if (!userData.isOnboarded || !userData.companyId) {
+                        router.push('/onboarding');
+                        return;
+                    }
+                    
+                    // Onboarded? Zum entsprechenden Dashboard je nach Unternehmenstyp
+                    if (userData.companyId) {
+                        const company = await getCompanyById(userData.companyId);
+                        if (company) {
+                            if (company.type === 'versender') {
+                                router.push('/versender/dashboard');
+                                return;
+                            } else if (company.type === 'subunternehmer') {
+                                router.push('/subunternehmer/dashboard');
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             
-        } catch (error) {
+            // Fallback: Zum allgemeinen Dashboard oder zur Callback-URL
+            router.push(callbackUrl);
+            
+        } catch (error: any) {
             console.error('Anmeldefehler:', error)
             setIsRedirecting(false)
             setSubmitting(false)
-            setMessage('Ein unerwarteter Fehler ist aufgetreten')
+            
+            // Fehlerbehandlung für Firebase-Fehler
+            if (error.code === 'auth/invalid-credential' || 
+                error.code === 'auth/user-not-found' || 
+                error.code === 'auth/wrong-password') {
+                setMessage('Ungültige Anmeldedaten')
+            } else if (error.code === 'auth/too-many-requests') {
+                setMessage('Zu viele Anmeldeversuche. Bitte versuche es später erneut.')
+            } else {
+                setMessage('Ein unerwarteter Fehler ist aufgetreten')
+            }
         }
     }
 
