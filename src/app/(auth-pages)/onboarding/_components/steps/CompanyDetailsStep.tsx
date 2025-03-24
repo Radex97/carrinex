@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import Select from '@/components/ui/Select'
 import type { CompanyType } from '@/firebase/firestore'
+import { useState } from 'react'
 
 // Fahrzeugtypen für Subunternehmer
 const vehicleOptions = [
@@ -98,73 +99,109 @@ const versenderSchema = z.object({
     preferredCargoTypes: z.array(z.string()).min(1, 'Bitte wähle mindestens einen Frachttyp')
 });
 
+// Typ für die Subunternehmer-Formulardaten
+type SubunternehmerFormData = z.infer<typeof subunternehmerSchema>;
+
+// Typ für die Versender-Formulardaten
+type VersenderFormData = z.infer<typeof versenderSchema>;
+
 export const CompanyDetailsStep = ({
     companyData,
     updateCompanyData,
     onNext,
     onPrev
 }: CompanyDetailsStepProps) => {
+    // Lokale State für Checkbox-Werte
+    const [selectedVehicleTypes, setSelectedVehicleTypes] = useState<string[]>(companyData.vehicleTypes || []);
+    const [selectedServiceAreas, setSelectedServiceAreas] = useState<string[]>(companyData.serviceAreas || []);
+    const [selectedCargoTypes, setSelectedCargoTypes] = useState<string[]>(companyData.preferredCargoTypes || []);
     
-    // Bestimme das Schema basierend auf dem Unternehmenstyp
-    const validationSchema = companyData.type === 'subunternehmer' 
-        ? subunternehmerSchema 
-        : versenderSchema;
+    // Wähle das richtige Schema und Form-Typ basierend auf dem Unternehmenstyp
+    const isSubunternehmer = companyData.type === 'subunternehmer';
     
-    // Type für die Formular-Daten
-    type FormData = z.infer<typeof validationSchema>;
+    // Type für die Formular-Daten als Union-Typ
+    type FormData = SubunternehmerFormData | VersenderFormData;
     
     const {
         control,
         handleSubmit,
-        setValue,
         formState: { errors }
     } = useForm<FormData>({
-        resolver: zodResolver(validationSchema),
-        defaultValues: companyData.type === 'subunternehmer' 
+        resolver: zodResolver(isSubunternehmer ? subunternehmerSchema : versenderSchema),
+        defaultValues: isSubunternehmer 
             ? {
                 vatId: companyData.vatId,
                 phoneNumber: companyData.phoneNumber,
                 contactEmail: companyData.contactEmail,
-                vehicleTypes: companyData.vehicleTypes,
-                serviceAreas: companyData.serviceAreas
-            } 
+                vehicleTypes: selectedVehicleTypes,
+                serviceAreas: selectedServiceAreas
+            } as SubunternehmerFormData
             : {
                 vatId: companyData.vatId,
                 phoneNumber: companyData.phoneNumber,
                 contactEmail: companyData.contactEmail,
                 industry: companyData.industry,
-                preferredCargoTypes: companyData.preferredCargoTypes
-            }
+                preferredCargoTypes: selectedCargoTypes
+            } as VersenderFormData
     });
     
     const onSubmit = (data: FormData) => {
+        // Aktualisiere die lokalen Werte im Formular-Daten-Objekt
+        if (isSubunternehmer) {
+            (data as SubunternehmerFormData).vehicleTypes = selectedVehicleTypes;
+            (data as SubunternehmerFormData).serviceAreas = selectedServiceAreas;
+        } else {
+            (data as VersenderFormData).preferredCargoTypes = selectedCargoTypes;
+        }
+        
         updateCompanyData(data);
         onNext();
     };
 
-    // Handler für Checkbox-Gruppen
-    const handleCheckboxChange = (
-        name: 'vehicleTypes' | 'serviceAreas' | 'preferredCargoTypes', 
-        value: string, 
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        const checked = event.target.checked;
-        const currentValues = companyData[name] || [];
-                
-        const newValues = checked
-            ? [...currentValues, value]
-            : currentValues.filter(v => v !== value);
-            
-        // Update both form state and parent state
-        setValue(name as any, newValues as any);
-        updateCompanyData({ [name]: newValues } as Partial<CompanyData>);
+    // Handler für Fahrzeugtypen Checkboxen
+    const handleVehicleTypeChange = (value: string, checked: boolean) => {
+        let newValues;
+        if (checked) {
+            newValues = [...selectedVehicleTypes, value];
+        } else {
+            newValues = selectedVehicleTypes.filter(v => v !== value);
+        }
+        
+        setSelectedVehicleTypes(newValues);
+        updateCompanyData({ vehicleTypes: newValues });
+    };
+    
+    // Handler für Servicegebiete Checkboxen
+    const handleServiceAreaChange = (value: string, checked: boolean) => {
+        let newValues;
+        if (checked) {
+            newValues = [...selectedServiceAreas, value];
+        } else {
+            newValues = selectedServiceAreas.filter(v => v !== value);
+        }
+        
+        setSelectedServiceAreas(newValues);
+        updateCompanyData({ serviceAreas: newValues });
+    };
+    
+    // Handler für Frachttypen Checkboxen
+    const handleCargoTypeChange = (value: string, checked: boolean) => {
+        let newValues;
+        if (checked) {
+            newValues = [...selectedCargoTypes, value];
+        } else {
+            newValues = selectedCargoTypes.filter(v => v !== value);
+        }
+        
+        setSelectedCargoTypes(newValues);
+        updateCompanyData({ preferredCargoTypes: newValues });
     };
     
     return (
         <div>
             <h4 className="mb-4">Unternehmensdetails</h4>
             <p className="mb-6 text-gray-500">
-                {companyData.type === 'subunternehmer'
+                {isSubunternehmer
                     ? 'Bitte gib spezifische Details zu deinem Transportunternehmen an.'
                     : 'Bitte gib spezifische Details zu deinem Versenderunternehmen an.'}
             </p>
@@ -223,22 +260,29 @@ export const CompanyDetailsStep = ({
                     />
                 </FormItem>
                 
-                {companyData.type === 'subunternehmer' ? (
+                {isSubunternehmer ? (
                     <>
                         <FormItem
                             label="Fahrzeugtypen"
-                            invalid={Boolean(errors.vehicleTypes)}
-                            errorMessage={errors.vehicleTypes?.message}
+                            invalid={isSubunternehmer && 
+                                     selectedVehicleTypes.length === 0 && 
+                                     Boolean(errors?.vehicleTypes)}
+                            errorMessage={isSubunternehmer && 
+                                          (errors as any)?.vehicleTypes?.message}
                         >
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {vehicleOptions.map(option => (
-                                    <div key={option.value} className="flex items-center">
-                                        <Checkbox 
-                                            checked={companyData.vehicleTypes.includes(option.value)}
-                                            onChange={(e) => handleCheckboxChange('vehicleTypes', option.value, e)}
-                                        >
+                                    <div key={option.value} className="flex items-center mb-2">
+                                        <input 
+                                            type="checkbox"
+                                            id={`vehicle-${option.value}`}
+                                            className="mr-2 h-4 w-4 text-primary"
+                                            checked={selectedVehicleTypes.includes(option.value)}
+                                            onChange={(e) => handleVehicleTypeChange(option.value, e.target.checked)}
+                                        />
+                                        <label htmlFor={`vehicle-${option.value}`} className="ml-2">
                                             {option.label}
-                                        </Checkbox>
+                                        </label>
                                     </div>
                                 ))}
                             </div>
@@ -246,18 +290,25 @@ export const CompanyDetailsStep = ({
                         
                         <FormItem
                             label="Servicegebiete"
-                            invalid={Boolean(errors.serviceAreas)}
-                            errorMessage={errors.serviceAreas?.message}
+                            invalid={isSubunternehmer && 
+                                     selectedServiceAreas.length === 0 && 
+                                     Boolean(errors?.serviceAreas)}
+                            errorMessage={isSubunternehmer && 
+                                          (errors as any)?.serviceAreas?.message}
                         >
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {stateOptions.map(option => (
-                                    <div key={option.value} className="flex items-center">
-                                        <Checkbox 
-                                            checked={companyData.serviceAreas.includes(option.value)}
-                                            onChange={(e) => handleCheckboxChange('serviceAreas', option.value, e)}
-                                        >
+                                    <div key={option.value} className="flex items-center mb-2">
+                                        <input 
+                                            type="checkbox"
+                                            id={`area-${option.value}`}
+                                            className="mr-2 h-4 w-4 text-primary"
+                                            checked={selectedServiceAreas.includes(option.value)}
+                                            onChange={(e) => handleServiceAreaChange(option.value, e.target.checked)}
+                                        />
+                                        <label htmlFor={`area-${option.value}`} className="ml-2">
                                             {option.label}
-                                        </Checkbox>
+                                        </label>
                                     </div>
                                 ))}
                             </div>
@@ -267,8 +318,8 @@ export const CompanyDetailsStep = ({
                     <>
                         <FormItem
                             label="Branche"
-                            invalid={Boolean(errors.industry)}
-                            errorMessage={errors.industry?.message}
+                            invalid={!isSubunternehmer && Boolean(errors?.industry)}
+                            errorMessage={!isSubunternehmer && (errors as any)?.industry?.message}
                         >
                             <Controller
                                 name="industry"
@@ -285,18 +336,25 @@ export const CompanyDetailsStep = ({
                         
                         <FormItem
                             label="Bevorzugte Frachttypen"
-                            invalid={Boolean(errors.preferredCargoTypes)}
-                            errorMessage={errors.preferredCargoTypes?.message}
+                            invalid={!isSubunternehmer && 
+                                     selectedCargoTypes.length === 0 && 
+                                     Boolean(errors?.preferredCargoTypes)}
+                            errorMessage={!isSubunternehmer && 
+                                          (errors as any)?.preferredCargoTypes?.message}
                         >
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {cargoOptions.map(option => (
-                                    <div key={option.value} className="flex items-center">
-                                        <Checkbox 
-                                            checked={companyData.preferredCargoTypes.includes(option.value)}
-                                            onChange={(e) => handleCheckboxChange('preferredCargoTypes', option.value, e)}
-                                        >
+                                    <div key={option.value} className="flex items-center mb-2">
+                                        <input 
+                                            type="checkbox"
+                                            id={`cargo-${option.value}`}
+                                            className="mr-2 h-4 w-4 text-primary"
+                                            checked={selectedCargoTypes.includes(option.value)}
+                                            onChange={(e) => handleCargoTypeChange(option.value, e.target.checked)}
+                                        />
+                                        <label htmlFor={`cargo-${option.value}`} className="ml-2">
                                             {option.label}
-                                        </Checkbox>
+                                        </label>
                                     </div>
                                 ))}
                             </div>
