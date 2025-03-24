@@ -18,11 +18,17 @@ const apiAuthPrefix = `${appConfig.apiPrefix}/auth`
 
 export default auth((req) => {
     const { nextUrl } = req
+    const pathname = nextUrl.pathname
+    
+    // Schnelle Prüfung für Root-Pfad (Landing Page)
+    if (pathname === '/') {
+        return; // Erlaube direkten Zugriff ohne weitere Prüfungen
+    }
+    
     const isSignedIn = !!req.auth
-
-    const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix)
-    const isPublicRoute = publicRoutes.includes(nextUrl.pathname)
-    const isAuthRoute = authRoutes.includes(nextUrl.pathname)
+    const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
+    const isPublicRoute = publicRoutes.includes(pathname)
+    const isAuthRoute = authRoutes.includes(pathname)
 
     /** Skip auth middleware for api routes */
     if (isApiAuthRoute) return
@@ -39,7 +45,7 @@ export default auth((req) => {
 
     /** Redirect to sign-in if not signed in & path is not public route */
     if (!isSignedIn && !isPublicRoute) {
-        let callbackUrl = nextUrl.pathname
+        let callbackUrl = pathname
         if (nextUrl.search) {
             callbackUrl += nextUrl.search
         }
@@ -52,9 +58,9 @@ export default auth((req) => {
         )
     }
 
-    /** Role based access control */
-    if (isSignedIn && nextUrl.pathname !== '/access-denied') {
-        const routeMeta = protectedRoutes[nextUrl.pathname]
+    /** Role based access control - nur für geschützte Routen */
+    if (isSignedIn && !isPublicRoute && pathname !== '/access-denied') {
+        const routeMeta = protectedRoutes[pathname]
         
         // Wenn die Route Berechtigungen hat und diese nicht leer sind
         if (routeMeta?.authority && routeMeta.authority.length > 0) {
@@ -74,5 +80,11 @@ export default auth((req) => {
 })
 
 export const config = {
-    matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api)(.*)'],
+    // Optimierter Matcher: Ignoriert mehr statische Assets und verbessert die Leistung
+    matcher: [
+        // Alle Pfade außer:
+        "/((?!api|_next/static|_next/image|favicon.ico|images|img|fonts|assets|public).*)", 
+        // Aber API-Routen einschließen
+        "/api/(.*)"
+    ],
 }

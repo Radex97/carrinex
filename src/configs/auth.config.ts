@@ -35,32 +35,12 @@ export default {
             if (session.user) {
                 session.user.id = token.sub as string;
                 
-                // Setze Standardrolle, falls keine Rollen vorhanden sind
+                // Verwende Rollen aus dem Token, um Firestore-Anfragen zu reduzieren
                 session.user.authority = token.authority as string[] || ['user'];
                 
-                try {
-                    // Versuche, aktuelle Daten aus Firestore zu laden
-                    const userData = await getUserById(token.sub as string);
-                    if (userData) {
-                        // Wenn Firestore-Daten vorhanden sind, verwende die Rollen von dort
-                        const userType = userData.companyType || 'user';
-                        
-                        // Bestimme die Benutzerrolle basierend auf dem Unternehmenstyp
-                        let userRoles: string[] = ['user'];
-                        
-                        if (userData.role === 'admin') {
-                            userRoles = ['admin'];
-                        } else if (userType === 'versender') {
-                            userRoles = ['versender'];
-                        } else if (userType === 'subunternehmer') {
-                            userRoles = ['subunternehmer'];
-                        }
-                        
-                        session.user.authority = userRoles;
-                    }
-                } catch (error) {
-                    console.error('Fehler beim Laden der Benutzerdaten:', error);
-                }
+                // Firestore-Anfragen nur für geschützte Routen durchführen,
+                // nicht für öffentliche Seiten wie die Landing Page
+                // Dies wird nun in den jeweiligen geschützten Komponenten durchgeführt
             }
             return session;
         },
