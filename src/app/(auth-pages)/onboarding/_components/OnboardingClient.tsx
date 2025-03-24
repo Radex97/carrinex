@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Logo from '@/components/template/Logo'
 import Steps from '@/components/ui/Steps'
-import { Card } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import useTheme from '@/utils/hooks/useTheme'
 import toast from '@/components/ui/toast'
@@ -173,7 +172,7 @@ const OnboardingClient = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full">
             <div className="mb-8 flex justify-center">
                 <Logo
                     type="streamline"
@@ -183,26 +182,28 @@ const OnboardingClient = () => {
                 />
             </div>
             <div className="mb-8 text-center">
-                <h2 className="mb-2">Willkommen bei Carrinex!</h2>
-                <p className="font-semibold heading-text">
+                <h2 className="mb-2 text-2xl font-bold">Willkommen bei Carrinex!</h2>
+                <p className="text-lg text-gray-600">
                     Lass uns Dein Unternehmen einrichten.
                 </p>
             </div>
             
-            <Card className="max-w-3xl mx-auto shadow-lg rounded-xl">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                 <div className="p-4 sm:p-6 md:p-8">
-                    <Steps current={currentStep}>
-                        <Steps.Item title="Unternehmenstyp" />
-                        <Steps.Item title="Unternehmensdaten" />
-                        <Steps.Item title="Details" />
-                        <Steps.Item title="Abschluss" />
-                    </Steps>
-                    
-                    <div className="mt-8 max-w-2xl mx-auto">
-                        {renderCurrentStep()}
+                    <div className="max-w-4xl mx-auto">
+                        <Steps current={currentStep}>
+                            <Steps.Item title="Unternehmenstyp" />
+                            <Steps.Item title="Unternehmensdaten" />
+                            <Steps.Item title="Details" />
+                            <Steps.Item title="Abschluss" />
+                        </Steps>
+                        
+                        <div className="mt-8">
+                            {renderCurrentStep()}
+                        </div>
                     </div>
                 </div>
-            </Card>
+            </div>
         </div>
     )
 }

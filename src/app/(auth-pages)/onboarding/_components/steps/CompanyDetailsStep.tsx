@@ -80,6 +80,24 @@ interface CompanyDetailsStepProps {
     onPrev: () => void
 }
 
+// Schema für Subunternehmen
+const subunternehmerSchema = z.object({
+    vatId: z.string().min(1, 'Bitte gib deine USt-IdNr. ein'),
+    phoneNumber: z.string().min(1, 'Bitte gib eine Telefonnummer ein'),
+    contactEmail: z.string().email('Bitte gib eine gültige E-Mail-Adresse ein'),
+    vehicleTypes: z.array(z.string()).min(1, 'Bitte wähle mindestens einen Fahrzeugtyp'),
+    serviceAreas: z.array(z.string()).min(1, 'Bitte wähle mindestens ein Servicegebiet')
+});
+
+// Schema für Versender
+const versenderSchema = z.object({
+    vatId: z.string().min(1, 'Bitte gib deine USt-IdNr. ein'),
+    phoneNumber: z.string().min(1, 'Bitte gib eine Telefonnummer ein'),
+    contactEmail: z.string().email('Bitte gib eine gültige E-Mail-Adresse ein'),
+    industry: z.string().min(1, 'Bitte wähle eine Branche'),
+    preferredCargoTypes: z.array(z.string()).min(1, 'Bitte wähle mindestens einen Frachttyp')
+});
+
 export const CompanyDetailsStep = ({
     companyData,
     updateCompanyData,
@@ -87,24 +105,13 @@ export const CompanyDetailsStep = ({
     onPrev
 }: CompanyDetailsStepProps) => {
     
-    // Validierungsschema basierend auf dem Unternehmenstyp
-    const validationSchema = z.object({
-        vatId: z.string().min(1, 'Bitte gib deine USt-IdNr. ein'),
-        phoneNumber: z.string().min(1, 'Bitte gib eine Telefonnummer ein'),
-        contactEmail: z.string().email('Bitte gib eine gültige E-Mail-Adresse ein'),
-        ...(companyData.type === 'subunternehmer' 
-            ? {
-                vehicleTypes: z.array(z.string()).min(1, 'Bitte wähle mindestens einen Fahrzeugtyp'),
-                serviceAreas: z.array(z.string()).min(1, 'Bitte wähle mindestens ein Servicegebiet')
-            } 
-            : {
-                industry: z.string().min(1, 'Bitte wähle eine Branche'),
-                preferredCargoTypes: z.array(z.string()).min(1, 'Bitte wähle mindestens einen Frachttyp')
-            })
-    })
+    // Bestimme das Schema basierend auf dem Unternehmenstyp
+    const validationSchema = companyData.type === 'subunternehmer' 
+        ? subunternehmerSchema 
+        : versenderSchema;
     
-    // Formulardaten-Typ basierend auf dem Unternehmenstyp
-    type FormData = z.infer<typeof validationSchema>
+    // Type für die Formular-Daten
+    type FormData = z.infer<typeof validationSchema>;
     
     const {
         control,
@@ -113,41 +120,45 @@ export const CompanyDetailsStep = ({
         formState: { errors }
     } = useForm<FormData>({
         resolver: zodResolver(validationSchema),
-        defaultValues: {
-            vatId: companyData.vatId,
-            phoneNumber: companyData.phoneNumber,
-            contactEmail: companyData.contactEmail,
-            ...(companyData.type === 'subunternehmer' 
-                ? {
-                    vehicleTypes: companyData.vehicleTypes,
-                    serviceAreas: companyData.serviceAreas
-                } 
-                : {
-                    industry: companyData.industry,
-                    preferredCargoTypes: companyData.preferredCargoTypes
-                })
-        }
-    })
+        defaultValues: companyData.type === 'subunternehmer' 
+            ? {
+                vatId: companyData.vatId,
+                phoneNumber: companyData.phoneNumber,
+                contactEmail: companyData.contactEmail,
+                vehicleTypes: companyData.vehicleTypes,
+                serviceAreas: companyData.serviceAreas
+            } 
+            : {
+                vatId: companyData.vatId,
+                phoneNumber: companyData.phoneNumber,
+                contactEmail: companyData.contactEmail,
+                industry: companyData.industry,
+                preferredCargoTypes: companyData.preferredCargoTypes
+            }
+    });
     
     const onSubmit = (data: FormData) => {
-        updateCompanyData(data)
-        onNext()
-    }
+        updateCompanyData(data);
+        onNext();
+    };
 
     // Handler für Checkbox-Gruppen
-    const handleCheckboxChange = (name: 'vehicleTypes' | 'serviceAreas' | 'preferredCargoTypes', value: string, checked: boolean) => {
-        const currentValues = name === 'vehicleTypes' 
-            ? companyData.vehicleTypes 
-            : name === 'serviceAreas' 
-                ? companyData.serviceAreas 
-                : companyData.preferredCargoTypes
+    const handleCheckboxChange = (
+        name: 'vehicleTypes' | 'serviceAreas' | 'preferredCargoTypes', 
+        value: string, 
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const checked = event.target.checked;
+        const currentValues = companyData[name] || [];
                 
         const newValues = checked
             ? [...currentValues, value]
-            : currentValues.filter(v => v !== value)
+            : currentValues.filter(v => v !== value);
             
-        setValue(name, newValues)
-    }
+        // Update both form state and parent state
+        setValue(name as any, newValues as any);
+        updateCompanyData({ [name]: newValues } as Partial<CompanyData>);
+    };
     
     return (
         <div>
@@ -221,13 +232,14 @@ export const CompanyDetailsStep = ({
                         >
                             <div className="grid grid-cols-2 gap-2">
                                 {vehicleOptions.map(option => (
-                                    <Checkbox 
-                                        key={option.value}
-                                        checked={companyData.vehicleTypes.includes(option.value)}
-                                        onChange={e => handleCheckboxChange('vehicleTypes', option.value, e.target.checked)}
-                                    >
-                                        {option.label}
-                                    </Checkbox>
+                                    <div key={option.value} className="flex items-center">
+                                        <Checkbox 
+                                            checked={companyData.vehicleTypes.includes(option.value)}
+                                            onChange={(e) => handleCheckboxChange('vehicleTypes', option.value, e)}
+                                        >
+                                            {option.label}
+                                        </Checkbox>
+                                    </div>
                                 ))}
                             </div>
                         </FormItem>
@@ -239,13 +251,14 @@ export const CompanyDetailsStep = ({
                         >
                             <div className="grid grid-cols-2 gap-2">
                                 {stateOptions.map(option => (
-                                    <Checkbox 
-                                        key={option.value}
-                                        checked={companyData.serviceAreas.includes(option.value)}
-                                        onChange={e => handleCheckboxChange('serviceAreas', option.value, e.target.checked)}
-                                    >
-                                        {option.label}
-                                    </Checkbox>
+                                    <div key={option.value} className="flex items-center">
+                                        <Checkbox 
+                                            checked={companyData.serviceAreas.includes(option.value)}
+                                            onChange={(e) => handleCheckboxChange('serviceAreas', option.value, e)}
+                                        >
+                                            {option.label}
+                                        </Checkbox>
+                                    </div>
                                 ))}
                             </div>
                         </FormItem>
@@ -262,7 +275,6 @@ export const CompanyDetailsStep = ({
                                 control={control}
                                 render={({ field }) => (
                                     <Select
-                                        placeholder="Wähle deine Branche"
                                         options={industryOptions}
                                         value={industryOptions.find(option => option.value === field.value)}
                                         onChange={option => field.onChange(option?.value)}
@@ -272,36 +284,37 @@ export const CompanyDetailsStep = ({
                         </FormItem>
                         
                         <FormItem
-                            label="Bevorzugte Frachtarten"
+                            label="Bevorzugte Frachttypen"
                             invalid={Boolean(errors.preferredCargoTypes)}
                             errorMessage={errors.preferredCargoTypes?.message}
                         >
                             <div className="grid grid-cols-2 gap-2">
                                 {cargoOptions.map(option => (
-                                    <Checkbox 
-                                        key={option.value}
-                                        checked={companyData.preferredCargoTypes.includes(option.value)}
-                                        onChange={e => handleCheckboxChange('preferredCargoTypes', option.value, e.target.checked)}
-                                    >
-                                        {option.label}
-                                    </Checkbox>
+                                    <div key={option.value} className="flex items-center">
+                                        <Checkbox 
+                                            checked={companyData.preferredCargoTypes.includes(option.value)}
+                                            onChange={(e) => handleCheckboxChange('preferredCargoTypes', option.value, e)}
+                                        >
+                                            {option.label}
+                                        </Checkbox>
+                                    </div>
                                 ))}
                             </div>
                         </FormItem>
                     </>
                 )}
                 
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between mt-8">
                     <Button
-                        type="button"
-                        variant="plain"
+                        variant="twoTone"
                         onClick={onPrev}
+                        type="button"
                     >
                         Zurück
                     </Button>
                     <Button
-                        type="submit"
                         variant="solid"
+                        type="submit"
                     >
                         Weiter
                     </Button>
