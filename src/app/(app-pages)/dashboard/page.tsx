@@ -1,25 +1,24 @@
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import DashboardClient from './_components/DashboardClient'
 import { getUserById, getCompanyById, getCompanyLocations } from '@/firebase/firestore'
 
 const DashboardPage = async () => {
-    // Session prüfen
-    const session = await getServerSession(authOptions)
-    if (!session) {
+    // Session prüfen mit der neuen auth()-Funktion aus NextAuth
+    const session = await auth()
+    if (!session || !session.user) {
         redirect('/sign-in')
     }
 
     // Benutzer aus Firestore abrufen
-    const userEmail = session.user?.email
-    if (!userEmail) {
-        console.error('Keine Benutzer-Email in der Session gefunden')
+    const userId = session.user.id
+    if (!userId) {
+        console.error('Keine Benutzer-ID in der Session gefunden')
         redirect('/sign-in')
     }
     
-    // Benutzer nach ID oder Email abrufen (je nach implementierten Funktionen)
-    const user = await getUserById(session.user.id)
+    // Benutzer nach ID abrufen
+    const user = await getUserById(userId)
     if (!user) {
         console.error('Benutzer nicht gefunden')
         redirect('/sign-in')
