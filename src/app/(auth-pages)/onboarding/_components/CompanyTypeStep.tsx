@@ -7,19 +7,16 @@ import Card from '@/components/ui/Card'
 import type { CompanyType } from '@/firebase/firestore'
 
 interface CompanyTypeStepProps {
-    companyData: {
-        type: CompanyType
-    }
-    updateCompanyData: (data: Partial<{ type: CompanyType }>) => void
+    selectedType: CompanyType;
+    onTypeChange: (type: CompanyType) => void;
     onNext: () => void
 }
 
 export const CompanyTypeStep = ({ 
-    companyData, 
-    updateCompanyData, 
+    selectedType,
+    onTypeChange,
     onNext 
 }: CompanyTypeStepProps) => {
-    
     const handleTypeChange = (value: string) => {
         updateCompanyData({ type: value as CompanyType })
     }
@@ -44,13 +41,13 @@ export const CompanyTypeStep = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card
                             className={`p-6 cursor-pointer transition-all hover:shadow-md ${
-                                companyData.type === 'versender' ? 'border-primary ring-1 ring-primary' : ''
+                                selectedType === 'versender' ? 'border-primary ring-1 ring-primary' : ''
                             }`}
                             onClick={() => handleTypeChange('versender')}
                         >
                             <Radio value="versender" 
-                                checked={companyData.type === 'versender'}
-                                onChange={e => handleTypeChange(e.target.value)}
+                                checked={selectedType === 'versender'}
+                                onChange={() => onTypeChange('versender')}
                             >
                                 <h5 className="font-medium text-lg">Versender</h5>
                             </Radio>
@@ -61,13 +58,13 @@ export const CompanyTypeStep = ({
                         
                         <Card
                             className={`p-6 cursor-pointer transition-all hover:shadow-md ${
-                                companyData.type === 'subunternehmer' ? 'border-primary ring-1 ring-primary' : ''
+                                selectedType === 'subunternehmer' ? 'border-primary ring-1 ring-primary' : ''
                             }`}
                             onClick={() => handleTypeChange('subunternehmer')}
                         >
                             <Radio value="subunternehmer" 
-                                checked={companyData.type === 'subunternehmer'}
-                                onChange={e => handleTypeChange(e.target.value)}
+                                checked={selectedType === 'subunternehmer'}
+                                onChange={() => onTypeChange('subunternehmer')}
                             >
                                 <h5 className="font-medium text-lg">Subunternehmer</h5>
                             </Radio>
@@ -82,7 +79,7 @@ export const CompanyTypeStep = ({
                     <Button 
                         variant="solid" 
                         onClick={handleNext}
-                        disabled={!companyData.type}
+                        disabled={!selectedType}
                         size="lg"
                     >
                         Weiter
