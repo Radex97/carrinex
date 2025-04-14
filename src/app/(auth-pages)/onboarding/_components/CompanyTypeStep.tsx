@@ -17,13 +17,10 @@ export const CompanyTypeStep = ({
     onTypeChange,
     onNext 
 }: CompanyTypeStepProps) => {
-    const handleTypeChange = (value: string) => {
-        updateCompanyData({ type: value as CompanyType })
-    }
     
     const handleNext = () => {
-        if (companyData.type) {
-            onNext()
+        if (selectedType) {
+             onNext()
         }
     }
     
@@ -43,7 +40,7 @@ export const CompanyTypeStep = ({
                             className={`p-6 cursor-pointer transition-all hover:shadow-md ${
                                 selectedType === 'versender' ? 'border-primary ring-1 ring-primary' : ''
                             }`}
-                            onClick={() => handleTypeChange('versender')}
+                            onClick={() => onTypeChange('versender')}
                         >
                             <Radio value="versender" 
                                 checked={selectedType === 'versender'}
@@ -60,7 +57,7 @@ export const CompanyTypeStep = ({
                             className={`p-6 cursor-pointer transition-all hover:shadow-md ${
                                 selectedType === 'subunternehmer' ? 'border-primary ring-1 ring-primary' : ''
                             }`}
-                            onClick={() => handleTypeChange('subunternehmer')}
+                            onClick={() => onTypeChange('subunternehmer')}
                         >
                             <Radio value="subunternehmer" 
                                 checked={selectedType === 'subunternehmer'}
